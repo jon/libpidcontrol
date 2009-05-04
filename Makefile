@@ -8,7 +8,8 @@ STOWBASE := /usr/local/stow
 # if you use stow, a name for this stow package
 
 ## Mabe you care about these
-CC := g++
+CC := gcc
+LIBTOOL := libtool
 CXXFLAGS := -g -fPIC -I./include -Wall -Werror
 OCXXFLAGS := -O3 -funroll-loops -I./include
 
@@ -23,8 +24,15 @@ STOWPREFIX := $(STOWBASE)/$(STOWDIR)
 DISTPATH := $(HOME)/prism/tarballs
 DOXPATH := $(HOME)/prism/public_html/dox
 
+PLATFORM := $(shell uname -s)
 
-
+## OS X uses a different library extension, play nice
+ifeq ($(PLATFORM),Darwin)
+PRODUCT := $(PROJECT).dylib
+LDFLAGS := -lc
+else
+PRODUCT := $(PROJECT).so
+endif
 
 HEADERS := $(addprefix include/pidcontrol/,pidcontrol.h)
 
@@ -33,7 +41,7 @@ HEADERS := $(addprefix include/pidcontrol/,pidcontrol.h)
 .PHONY: doc default clean stow
 
 
-default: libpidcontrol.so
+default: $(PRODUCT)
 
 .c.o:
 	$(CC) $(CXXFLAGS) -c $<
@@ -41,11 +49,11 @@ default: libpidcontrol.so
 pid_test: pid_test.c
 	$(CC) $(CXXFLAGS) -o $@ $< -lpidcontrol
 
-libpidcontrol.so: pidcontrol.o $(HEADERS)
-	$(CC) -shared -Wl,-soname,$@ -o $@ $<
+$(PRODUCT): pidcontrol.o $(HEADERS)
+	$(LIBTOOL) -dynamic -o $@ $< $(LDFLAGS)
 
 clean:
-	rm -fv *.o *.so pid_test
+	rm -fv *.o *.so *.dylib pid_test
 
 distclean: clean
 	rm -rf doc
@@ -60,16 +68,16 @@ dist: distclean
 	cd .. &&               \
 	tar --exclude=.svn --lzma -cvf $(DISTPATH)/$(PROJECT)-$(VERSION).tar.lzma $(PROJECT)
 
-stow: libpidcontrol.so
+stow: $(PRODUCT)
 	mkdir -p $(STOWPREFIX)/include/ssdmu
 	mkdir -p $(STOWPREFIX)/lib/
-	install --mode 755 libpidcontrol.so $(STOWPREFIX)/lib
+	install --mode 755 $(PRODUCT) $(STOWPREFIX)/lib
 	install --mode 644 include/pidcontrol/*.h $(STOWPREFIX)/include/pidcontrol
 	cd $(STOWBASE) && stow $(STOWDIR)
 
 
-install: libpidcontrol.so
+install: $(PRODUCT)
 	mkdir -p $(PREFIX)/include/pidcontrol
 	mkdir -p $(PREFIX)/lib/
-	install --mode 755 libpidcontrol.so $(PREFIX)/lib
+	install --mode 755 $(PRODUCT) $(PREFIX)/lib
 	install --mode 644 include/pidcontrol/*.h $(PREFIX)/include/pidcontrol
