@@ -1,26 +1,41 @@
-
+/**
+ * Basic PID controller
+ *
+ * @file pidcontrol.h
+ * @author Jon Olson <jon@damogran.com>
+ */
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/**
+ * A description of a PID controller including gains, state, and errors.
+ *
+ * @struct pid_controller
+ */
 struct pid_controller {
-    double k_p; //< Proportional control gain
-    double k_d; //< Differential control gain
-    double k_i; //< Integral control gain
+    double k_p; ///< Proportional control gain
+    double k_d; ///< Differential control gain
+    double k_i; ///< Integral control gain
 
-    double dt; //< Timestep
+    double dt; ///< Timestep
 
-    double setpoint; //< Control setpoint
-    double pv; //< Process value
+    double setpoint; ///< Control setpoint
+    double pv; ///< Process value
 
-    double ev, ev_prior; //< Error value and prior error value
-    double de; //< Linear approximation of first derivative of error
-    double ie; //< Right triangle approximation of integral of error
+    double ev; ///< Current error value
+    double ev_prior; ///< Prior error value
+    double de; ///< Linear approximation of first derivative of error
+    double ie; ///< Right triangle approximation of integral of error
 
-    double control_command; //< Command to be issued
-    double command_clamp_min; //< Minimum control command value
-    double command_clamp_max; //< Maximum control command value
+    double control_command; ///< Command to be issued
+    double command_clamp_min; ///< Minimum control command value
+    double command_clamp_max; ///< Maximum control command value
 };
+
+/**
+ * Friendly type for struct pid_controller
+ */
 typedef struct pid_controller pid_controller_t;
 
 /**
@@ -28,7 +43,6 @@ typedef struct pid_controller pid_controller_t;
  * binaries remain compatible subject to structure reorganization or
  * element renaming
  *
- * @function pid_init
  * @param controller The controller to initialize
  * @param k_p Proportional control gain
  * @param k_d Differential control gain
@@ -43,7 +57,6 @@ void pid_init(pid_controller_t *controller, double k_p, double k_d, double k_i, 
  * Update a controller's error values (true, derivative, and integral) with
  * a sample from reality
  *
- * @function pid_update_error
  * @param controller The controller instance to update
  * @param process_value The latest sampled process value
  */
@@ -53,7 +66,6 @@ void pid_update_error(pid_controller_t *controller, double process_value);
  * Use the controller's current error values, gains, and clamps to calculate a
  * new control command
  *
- * @function pid_update_command
  * @param controller Controller to update
  * @return The new control command value
  */
@@ -68,7 +80,6 @@ double pid_update_command(pid_controller_t *controller);
  * Note that this does not actually apply the control command, thus allowing
  * you to feed forward additional control values
  *
- * @function pid_control
  * @param controller Controller to update
  * @param process_value The latest sampled process value
  * @return The new control command value
@@ -78,3 +89,4 @@ double pid_control(pid_controller_t *controller, double process_value);
 #ifdef __cplusplus
 }
 #endif
+
