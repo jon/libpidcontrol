@@ -9,8 +9,7 @@ STOWBASE := /usr/local/stow
 
 ## Mabe you care about these
 CC := gcc
-LIBTOOL := libtool
-CXXFLAGS := -g -fPIC -I./include -Wall -Werror
+CXXFLAGS := -g -fPIC -I./include -Wall
 OCXXFLAGS := -O3 -funroll-loops -I./include
 
 
@@ -50,7 +49,7 @@ pid_test: pid_test.c
 	$(CC) $(CXXFLAGS) -o $@ $< -lpidcontrol
 
 $(PRODUCT): pidcontrol.o $(HEADERS)
-	$(LIBTOOL) -dynamic -o $@ $< $(LDFLAGS)
+	$(CC) -shared -Wl,-soname,$@ -o $@ $< $(LDFLAGS)
 
 clean:
 	rm -fv *.o *.so *.dylib pid_test
